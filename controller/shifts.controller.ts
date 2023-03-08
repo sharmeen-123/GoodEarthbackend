@@ -1,10 +1,17 @@
 import e from "express";
 import shifts from "../models/shifts.model";
+import axios from 'axios';
+
+const cron = require("node-cron");
+// const shell = require('shelljs');
+// import fetch from 'node-fetch';
+
 
 const jwt = require("jsonwebtoken");
 
 //VALIDATION
 const Joi = require("@hapi/joi");
+let shifttid = false;
 
 // validate body of start shift
 const startShiftValidationSchema = Joi.object({
@@ -23,6 +30,38 @@ const changeLocationValidationSchema = Joi.object({
     lastLocation: Joi.object().min(3).required(),
   });
 
+   // .................... to update location .........................
+   const updateData = async () => {
+    console.log("in update.......")
+      try {
+        const response = await axios.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
+        let location = response.data;
+        console.log(`Location: ${location.latitude}`);
+        let updatedLocation = {
+          longitude: location.longitude,
+          latitude: location.latitude
+        }
+        let updateLocation = await shifts.findOneAndUpdate(
+          {_id : shifttid},
+          {lastLocation: updatedLocation,
+            $push : {
+                locations : updatedLocation
+              }}
+      )
+
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+  
+
+let test = cron.schedule('*/15 * * * *', () => {
+  console.log("cron running.......")
+  if(shifttid){
+    updateData();
+    console.log("data updated!!!", shifttid)
+  }
+});
   
 const shiftsController = {
   // ----------------- api to start shift ----------------- 
@@ -44,11 +83,13 @@ const shiftsController = {
         let locations = [shiftData.checkinLocation];
         console.log(locations);
         let shift = new shifts(shiftData);
+        //test.start()
   
         shift.save((error, newShift) => {
             if (error) {
               res.send(error.message);
             } else {
+              shifttid = newShift._id;
               const token = jwt.sign(
                 { _id: newShift._id },
                 process.env.TOKEN_SECRET
@@ -122,11 +163,14 @@ const shiftsController = {
 // ----------------- api to end shift ----------------- 
 async endShift(req, res) {
     // checking for validation
+
     const { error } = endShiftValidationSchema.validate(req.body);
+    //test.end()
     if (error) {
         console.log(error.details[0].message);
         res.status(400).send(error.details[0].message);
       } else {
+        shifttid = false;
         let id = req.params.id;
         let endShift = req.body;
   
@@ -187,5 +231,8 @@ async endShift(req, res) {
     
   },
 };
+
+ 
+
 
 export default shiftsController;

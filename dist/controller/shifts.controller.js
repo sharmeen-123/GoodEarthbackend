@@ -13,9 +13,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const shifts_model_1 = __importDefault(require("../models/shifts.model"));
+const axios_1 = __importDefault(require("axios"));
+const cron = require("node-cron");
+// const shell = require('shelljs');
+// import fetch from 'node-fetch';
 const jwt = require("jsonwebtoken");
 //VALIDATION
 const Joi = require("@hapi/joi");
+let shifttid = false;
 // validate body of start shift
 const startShiftValidationSchema = Joi.object({
     checkinLocation: Joi.object().required(),
@@ -31,6 +36,33 @@ const endShiftValidationSchema = Joi.object({
 // validate body of change location
 const changeLocationValidationSchema = Joi.object({
     lastLocation: Joi.object().min(3).required(),
+});
+// .................... to update location .........................
+const updateData = () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("in update.......");
+    try {
+        const response = yield axios_1.default.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
+        let location = response.data;
+        console.log(`Location: ${location.latitude}`);
+        let updatedLocation = {
+            longitude: location.longitude,
+            latitude: location.latitude
+        };
+        let updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: shifttid }, { lastLocation: updatedLocation,
+            $push: {
+                locations: updatedLocation
+            } });
+    }
+    catch (error) {
+        console.log(error.message);
+    }
+});
+let test = cron.schedule('*/15 * * * *', () => {
+    console.log("cron running.......");
+    if (shifttid) {
+        updateData();
+        console.log("data updated!!!", shifttid);
+    }
 });
 const shiftsController = {
     // ----------------- api to start shift ----------------- 
@@ -54,11 +86,13 @@ const shiftsController = {
                 let locations = [shiftData.checkinLocation];
                 console.log(locations);
                 let shift = new shifts_model_1.default(shiftData);
+                //test.start()
                 shift.save((error, newShift) => {
                     if (error) {
                         res.send(error.message);
                     }
                     else {
+                        shifttid = newShift._id;
                         const token = jwt.sign({ _id: newShift._id }, process.env.TOKEN_SECRET);
                         // sending response
                         res.status(200).send({
@@ -122,11 +156,13 @@ const shiftsController = {
         return __awaiter(this, void 0, void 0, function* () {
             // checking for validation
             const { error } = endShiftValidationSchema.validate(req.body);
+            //test.end()
             if (error) {
                 console.log(error.details[0].message);
                 res.status(400).send(error.details[0].message);
             }
             else {
+                shifttid = false;
                 let id = req.params.id;
                 let endShift = req.body;
                 let data = yield shifts_model_1.default.find({
