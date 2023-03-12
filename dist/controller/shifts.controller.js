@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const shifts_model_1 = __importDefault(require("../models/shifts.model"));
+const cycle_model_1 = __importDefault(require("../models/cycle.model"));
 const axios_1 = __importDefault(require("axios"));
 const cron = require("node-cron");
 // const shell = require('shelljs');
@@ -48,22 +49,45 @@ const updateData = () => __awaiter(void 0, void 0, void 0, function* () {
             longitude: location.longitude,
             latitude: location.latitude
         };
-        let updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: shifttid }, { lastLocation: updatedLocation,
+        let updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: shifttid }, {
+            lastLocation: updatedLocation,
             $push: {
                 locations: updatedLocation
-            } });
+            }
+        });
     }
     catch (error) {
         console.log(error.message);
     }
 });
 let test = cron.schedule('*/15 * * * *', () => {
-    console.log("cron running.......");
+    // console.log("cron running.......")
     if (shifttid) {
         updateData();
         console.log("data updated!!!", shifttid);
     }
 });
+// store shift to cycle after 15 days
+const cycle = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    // Function call
+    cycle_model_1.default.insertMany(data).then(function () {
+        console.log("Data inserted"); // Success
+    }).catch(function (error) {
+        console.log(error); // Failure
+    });
+});
+// get all shifts
+const shiftAll = () => __awaiter(void 0, void 0, void 0, function* () {
+    let data = yield shifts_model_1.default.find({});
+    // console.log(data)
+    cycle(data);
+});
+// crone 2
+cron.schedule('* * */15 * *', () => {
+    console.log("cron running on cycle compeletion");
+    shiftAll();
+    console.log("data updated!!!");
+}).start();
 const shiftsController = {
     // ----------------- api to start shift ----------------- 
     startShift(req, res) {
@@ -140,10 +164,12 @@ const shiftsController = {
                 console.log("data", ifUpdate);
                 if (ifUpdate) {
                     // update location if changed
-                    updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: id }, { lastLocation: location.lastLocation,
+                    updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: id }, {
+                        lastLocation: location.lastLocation,
                         $push: {
                             locations: location.lastLocation
-                        } });
+                        }
+                    });
                 }
                 res.status(200).send({
                     data: "Location changed successfully",
@@ -169,14 +195,16 @@ const shiftsController = {
                     _id: id,
                 });
                 // update location
-                const updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: id }, { lastLocation: endShift.checkoutLocation,
+                const updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: id }, {
+                    lastLocation: endShift.checkoutLocation,
                     checkoutLocation: endShift.checkoutLocation,
                     checkoutTime: endShift.checkoutTime,
                     totalHours: endShift.totalHours,
                     status: "Compeleted",
                     $push: {
                         locations: endShift.checkoutLocation,
-                    } });
+                    }
+                });
                 if (!updateLocation) {
                     res.status(400).send("User not Exists");
                 }
@@ -217,6 +245,26 @@ const shiftsController = {
                     data: "user not found!",
                 });
             }
+        });
+    },
+    // ----------------- api to get number of active and completed shifts ----------------- 
+    getNumberOfShifts(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let completedShifts = yield shifts_model_1.default.find({
+                status: "Compeleted",
+            });
+            let activeShifts = yield shifts_model_1.default.find({
+                status: "active",
+            });
+            let allShifts = yield shifts_model_1.default.find({});
+            let data = {
+                activeShifts: activeShifts.length,
+                completedShifts: completedShifts.length,
+                allShifts: allShifts.length
+            };
+            res.status(200).send({
+                data: data,
+            });
         });
     },
 };

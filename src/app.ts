@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import router from "../routes/main.route";
 import initSocket from "../routes/socket";
 import http from "http";
+import fileUpload = require('express-fileupload')
 const mongoose = require("mongoose");
 
 class App {
@@ -22,6 +23,7 @@ class App {
       transports: ["websocket", "polling"],
       cors: {
         origin: "http://127.0.0.1:8081",
+        // origin: '*',
       },
     });
     this.PORT = process.env.PORT || 8000;

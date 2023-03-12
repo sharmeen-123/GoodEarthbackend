@@ -8,5 +8,6 @@ shiftsRouter.put("/changeLocation/:id", shiftsController.changeLocation);
 shiftsRouter.put("/endShift/:id", shiftsController.endShift);
 shiftsRouter.get("/getAllShifts", shiftsController.getAllShifts);
 shiftsRouter.get("/getShiftsOfOneUser/:userID", shiftsController.getShiftsOfOneUser);
+shiftsRouter.get("/getNumberOfShifts", shiftsController.getNumberOfShifts);
 
 export default shiftsRouter;
