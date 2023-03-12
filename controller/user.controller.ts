@@ -32,13 +32,14 @@ cloudinary.config({
 //validation for register data
 const registerValidationSchema = Joi.object({
   firstName: Joi.string().min(3).required(),
-  lastName: Joi.string().min(3).required(),
+  lastName: Joi.string().min(3),
   email: Joi.string().required(),
   phone: Joi.number().required(),
   password: Joi.string().min(3).required(),
   userType: Joi.string().required(),
   verified: Joi.boolean().required(),
   image: Joi.string(),
+  // dateJoined: Joi.string().required(),
   // active: Joi.boolean().required(),
   status: Joi.string().required(),
   isAdmin: Joi.boolean(),
@@ -124,10 +125,15 @@ const userController = {
         // encrypting password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
-        if(user.image){
-          const url = await uploadImage(user.image);
-          user.image = url;
-        }
+        var today = new Date(),
+        date =  today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+        user.dateJoined = date;
+        // if(user.image){
+
+        //   console.log("in Uploading Imagee", user.image)
+        //   const url = await uploadImage(user.image);
+        //   user.image = url;
+        // }
         user.save((error, registeredUser) => {
           if (error) {
             res.send(error.message);
@@ -149,6 +155,7 @@ const userController = {
               verified: registeredUser.verified,
               image: registeredUser.image,
               // active: registeredUser.active,
+              password: registeredUser.password,
               status: registeredUser.status,
               _id: registeredUser._id,
             });
@@ -220,20 +227,27 @@ const userController = {
 
   // ----------------- api to verify user ----------------- 
   async verifyUser(req, res) {
-    // checking for validation
-    const { error } = verifyValidationSchema.validate(req.body);
-    if (error) {
-      console.log(error.details[0].message);
-      res.status(400).send(error.details[0].message);
-    } else {
       let id = req.params.id;
-      let updatedUser = req.body;
+      let data = await User.find({
+        _id: id,
+      });
+  
+      const status = data[0].verified;
+      let update;
 
-        // set verified
-          const update = await User.findOneAndUpdate(
-            {_id : id},
-            {verified: updatedUser.verified,}
-        )
+      if (status){
+        // set verified false
+        update = await User.findOneAndUpdate(
+          {_id : id},
+          {verified: false}
+      )
+      }else{
+        // set verified false
+        update = await User.findOneAndUpdate(
+          {_id : id},
+          {verified: true}
+      )
+      }
       if (!update){
         res.status(400).send("User not Exists");
       }
@@ -242,8 +256,6 @@ const userController = {
           data: "data updated successfully",
         });
       }
-     
-    }   
   },
 
   // ----------------- api to make user active ----------------- 
@@ -331,6 +343,28 @@ const userController = {
     });
   },
 
+   // ----------------- api to get user by matching name ----------------- 
+   async getUserByName(req, res) {
+    let body = req.params.name;
+    let data = await User.find({
+    })
+    const checkName = (data) => {
+      let namee = data.firstName + " " + data.lastName;
+      if(namee.toUpperCase().includes(body.toUpperCase())){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+    
+    let filterData = data.filter(checkName);
+    
+    res.status(200).send({
+      data: filterData,
+    });
+  },
+
   // ----------------- api to delete user ----------------- 
   async deleteUser(req, res) {
     let userId = req.params.id;
@@ -395,18 +429,24 @@ const userController = {
   // ----------------- api to get number of admin and employees ----------------- 
   async getNumberOfUsers(req, res) {
     let employees = await User.find({
-      userType: "Employee",
+      userType: "Site Worker",
     });
     let admin = await User.find({
       userType: "Admin",
     });
+
+    let verified = await User.find({
+      verified: false,
+    });
+
     let allUsers = await User.find({
       
     });
     let data = {
       employees : employees.length,
       admin : admin.length,
-      allUsers : allUsers.length
+      allUsers : allUsers.length,
+      unverified: verified.length,
     }
       res.status(200).send({
         data: data,

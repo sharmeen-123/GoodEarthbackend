@@ -16,5 +16,6 @@ userRouter.post("/login", user_controller_1.default.login);
 userRouter.get("/getAllUsers", user_controller_1.default.getAllUsers);
 userRouter.get("/getOneUser/:id", user_controller_1.default.getOneUser);
 userRouter.get("/getNumberOfUsers", user_controller_1.default.getNumberOfUsers);
+userRouter.get("/getUserByName/:name", user_controller_1.default.getUserByName);
 exports.default = userRouter;
 //# sourceMappingURL=user.route.js.map

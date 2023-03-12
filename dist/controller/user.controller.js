@@ -35,13 +35,14 @@ cloudinary.config({
 //validation for register data
 const registerValidationSchema = Joi.object({
     firstName: Joi.string().min(3).required(),
-    lastName: Joi.string().min(3).required(),
+    lastName: Joi.string().min(3),
     email: Joi.string().required(),
     phone: Joi.number().required(),
     password: Joi.string().min(3).required(),
     userType: Joi.string().required(),
     verified: Joi.boolean().required(),
     image: Joi.string(),
+    // dateJoined: Joi.string().required(),
     // active: Joi.boolean().required(),
     status: Joi.string().required(),
     isAdmin: Joi.boolean(),
@@ -117,10 +118,13 @@ const userController = {
                     // encrypting password
                     const salt = yield bcrypt.genSalt(10);
                     user.password = yield bcrypt.hash(user.password, salt);
-                    if (user.image) {
-                        const url = yield uploadImage(user.image);
-                        user.image = url;
-                    }
+                    var today = new Date(), date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+                    user.dateJoined = date;
+                    // if(user.image){
+                    //   console.log("in Uploading Imagee", user.image)
+                    //   const url = await uploadImage(user.image);
+                    //   user.image = url;
+                    // }
                     user.save((error, registeredUser) => {
                         if (error) {
                             res.send(error.message);
@@ -139,6 +143,7 @@ const userController = {
                                 verified: registeredUser.verified,
                                 image: registeredUser.image,
                                 // active: registeredUser.active,
+                                password: registeredUser.password,
                                 status: registeredUser.status,
                                 _id: registeredUser._id,
                             });
@@ -204,25 +209,27 @@ const userController = {
     // ----------------- api to verify user ----------------- 
     verifyUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // checking for validation
-            const { error } = verifyValidationSchema.validate(req.body);
-            if (error) {
-                console.log(error.details[0].message);
-                res.status(400).send(error.details[0].message);
+            let id = req.params.id;
+            let data = yield user_model_1.default.find({
+                _id: id,
+            });
+            const status = data[0].verified;
+            let update;
+            if (status) {
+                // set verified false
+                update = yield user_model_1.default.findOneAndUpdate({ _id: id }, { verified: false });
             }
             else {
-                let id = req.params.id;
-                let updatedUser = req.body;
-                // set verified
-                const update = yield user_model_1.default.findOneAndUpdate({ _id: id }, { verified: updatedUser.verified, });
-                if (!update) {
-                    res.status(400).send("User not Exists");
-                }
-                else {
-                    res.status(200).send({
-                        data: "data updated successfully",
-                    });
-                }
+                // set verified false
+                update = yield user_model_1.default.findOneAndUpdate({ _id: id }, { verified: true });
+            }
+            if (!update) {
+                res.status(400).send("User not Exists");
+            }
+            else {
+                res.status(200).send({
+                    data: "data updated successfully",
+                });
             }
         });
     },
@@ -302,6 +309,26 @@ const userController = {
             });
         });
     },
+    // ----------------- api to get user by matching name ----------------- 
+    getUserByName(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let body = req.params.name;
+            let data = yield user_model_1.default.find({});
+            const checkName = (data) => {
+                let namee = data.firstName + " " + data.lastName;
+                if (namee.toUpperCase().includes(body.toUpperCase())) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            };
+            let filterData = data.filter(checkName);
+            res.status(200).send({
+                data: filterData,
+            });
+        });
+    },
     // ----------------- api to delete user ----------------- 
     deleteUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -364,16 +391,20 @@ const userController = {
     getNumberOfUsers(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let employees = yield user_model_1.default.find({
-                userType: "Employee",
+                userType: "Site Worker",
             });
             let admin = yield user_model_1.default.find({
                 userType: "Admin",
+            });
+            let verified = yield user_model_1.default.find({
+                verified: false,
             });
             let allUsers = yield user_model_1.default.find({});
             let data = {
                 employees: employees.length,
                 admin: admin.length,
-                allUsers: allUsers.length
+                allUsers: allUsers.length,
+                unverified: verified.length,
             };
             res.status(200).send({
                 data: data,

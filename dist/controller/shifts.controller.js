@@ -267,6 +267,36 @@ const shiftsController = {
             });
         });
     },
+    // ----------------- api to get number number of hours ----------------- 
+    getNumberOfHours(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let userID = req.params.userID;
+            const completedShifts = yield shifts_model_1.default.find({
+                status: "Compeleted",
+                userID: userID
+            });
+            let totalHours = 0;
+            completedShifts.map((val, ind) => {
+                let time = val.totalHours;
+                let time2 = time.split(":");
+                totalHours += (+time2[0]);
+                console.log((+time2[0]), " ", (+time2[1] / 60), " ", (+time2[1] / (60 * 60)));
+                totalHours += (+time2[1] / 60);
+                totalHours += (+time2[1] / (60 * 60));
+            });
+            totalHours = Math.round(totalHours);
+            if (completedShifts) {
+                res.status(200).send({
+                    data: totalHours,
+                });
+            }
+            else {
+                res.status(200).send({
+                    data: 0,
+                });
+            }
+        });
+    },
 };
 exports.default = shiftsController;
 //# sourceMappingURL=shifts.controller.js.map

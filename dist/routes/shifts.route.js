@@ -11,6 +11,7 @@ shiftsRouter.put("/changeLocation/:id", shifts_controller_1.default.changeLocati
 shiftsRouter.put("/endShift/:id", shifts_controller_1.default.endShift);
 shiftsRouter.get("/getAllShifts", shifts_controller_1.default.getAllShifts);
 shiftsRouter.get("/getShiftsOfOneUser/:userID", shifts_controller_1.default.getShiftsOfOneUser);
+shiftsRouter.get("/getNumberOfHours/:userID", shifts_controller_1.default.getNumberOfHours);
 shiftsRouter.get("/getNumberOfShifts", shifts_controller_1.default.getNumberOfShifts);
 exports.default = shiftsRouter;
 //# sourceMappingURL=shifts.route.js.map

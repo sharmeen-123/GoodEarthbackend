@@ -13,5 +13,6 @@ userRouter.post("/login", userController.login);
 userRouter.get("/getAllUsers", userController.getAllUsers);
 userRouter.get("/getOneUser/:id", userController.getOneUser);
 userRouter.get("/getNumberOfUsers", userController.getNumberOfUsers);
+userRouter.get("/getUserByName/:name", userController.getUserByName);
 
 export default userRouter;

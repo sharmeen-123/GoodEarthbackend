@@ -8,10 +8,13 @@ const userSchema = new Schema({
   },
   lastName: {
     type: String,
-    required: true,
   },
   image: {
     type: String,
+  },
+  dateJoined: {
+    type: String,
+    required: true,
   },
   address: {
     type: String,
