@@ -72,6 +72,15 @@ const cycle = (data) => __awaiter(void 0, void 0, void 0, function* () {
     // Function call
     cycle_model_1.default.insertMany(data).then(function () {
         console.log("Data inserted"); // Success
+        deleteShifts(data);
+    }).catch(function (error) {
+        console.log(error); // Failure
+    });
+});
+const deleteShifts = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    // Function call
+    shifts_model_1.default.remove().then(function () {
+        console.log("shifts removed"); // Success
     }).catch(function (error) {
         console.log(error); // Failure
     });
@@ -80,7 +89,9 @@ const cycle = (data) => __awaiter(void 0, void 0, void 0, function* () {
 const shiftAll = () => __awaiter(void 0, void 0, void 0, function* () {
     let data = yield shifts_model_1.default.find({});
     // console.log(data)
-    cycle(data);
+    if (data) {
+        cycle(data);
+    }
 });
 // crone 2
 cron.schedule('* * */15 * *', () => {
@@ -228,12 +239,26 @@ const shiftsController = {
             });
         });
     },
+    // ----------------- api to get all shifts ----------------- 
+    getActiveShifts(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let shift = req.query;
+            let data = yield shifts_model_1.default.find({
+                startedBy: shift.startedBy,
+                status: "active"
+            });
+            res.status(200).send({
+                data: data,
+            });
+        });
+    },
     // ----------------- api to get all shifts of particular user ----------------- 
     getShiftsOfOneUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let userID = req.params.userID;
             let shift = yield shifts_model_1.default.find({
                 userID: userID,
+                status: "Compeleted",
             });
             if (shift.length !== 0) {
                 res.status(200).send({
@@ -285,9 +310,13 @@ const shiftsController = {
                 totalHours += (+time2[1] / (60 * 60));
             });
             totalHours = Math.round(totalHours);
+            let data = {
+                totalHours: totalHours,
+                shifts: completedShifts.length
+            };
             if (completedShifts) {
                 res.status(200).send({
-                    data: totalHours,
+                    data: data,
                 });
             }
             else {

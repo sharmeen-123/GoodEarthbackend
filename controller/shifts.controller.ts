@@ -72,6 +72,17 @@ const cycle = async (data) => {
   // Function call
   cycles.insertMany(data).then(function () {
     console.log("Data inserted")  // Success
+    deleteShifts(data)
+  }).catch(function (error) {
+    console.log(error)      // Failure
+  });
+
+}
+
+const deleteShifts = async (data) =>{
+   // Function call
+   shifts.remove().then(function () {
+    console.log("shifts removed")  // Success
   }).catch(function (error) {
     console.log(error)      // Failure
   });
@@ -84,7 +95,10 @@ const shiftAll = async () => {
   let data = await shifts.find({
   });
   // console.log(data)
-  cycle(data)
+  if(data){
+
+    cycle(data)
+  }
 }
 
 // crone 2
@@ -250,11 +264,24 @@ const shiftsController = {
     });
   },
 
+    // ----------------- api to get all shifts ----------------- 
+    async getActiveShifts(req, res) {
+      let shift = req.query;
+      let data = await shifts.find({
+        startedBy: shift.startedBy,
+        status: "active"
+      });
+      res.status(200).send({
+        data: data,
+      });
+    },
+
   // ----------------- api to get all shifts of particular user ----------------- 
   async getShiftsOfOneUser(req, res) {
     let userID = req.params.userID;
     let shift = await shifts.find({
       userID: userID,
+      status : "Compeleted",
     });
     if (shift.length !== 0) {
       res.status(200).send({

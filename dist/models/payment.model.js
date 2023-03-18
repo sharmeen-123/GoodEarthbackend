@@ -11,7 +11,23 @@ const paymentSchema = new Schema({
         type: String,
         required: true
     },
+    paymentDate: {
+        type: Date,
+        required: true
+    },
+    userImage: {
+        type: String,
+        required: true
+    },
+    userEmail: {
+        type: String,
+        required: true
+    },
     wage: {
+        type: Number,
+        required: true
+    },
+    shifts: {
         type: Number,
         required: true
     },

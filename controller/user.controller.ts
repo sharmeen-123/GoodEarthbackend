@@ -1,7 +1,6 @@
 import router from "../routes/main.route";
 import User from "../models/user.model";
 import { json } from "express";
-// export CLOUDINARY_URL=cloudinary://799719869373998:LhU3V8GcPLCWcVmd_zmzPDPg_Go@dyapmvalo
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -9,27 +8,6 @@ const jwt = require("jsonwebtoken");
 //VALIDATION
 const Joi = require("@hapi/joi");
 
-// for uploading img on cloudinary
-// Require the cloudinary library
-const cloudinary = require('cloudinary').v2;
-
-// Return "https" URLs by setting secure: true
-
-
-cloudinary.config({
-  cloud_name: 'dyapmvalo',
-  api_key: '799719869373998',
-  api_secret: 'LhU3V8GcPLCWcVmd_zmzPDPg_Go'
-});
-
-// cloudinary.config({
-//   secure: true
-// });
-
-// Log the configuration
-// console.log(cloudinary.config());
-
-//validation for register data
 const registerValidationSchema = Joi.object({
   firstName: Joi.string().min(3).required(),
   lastName: Joi.string().min(3),
@@ -48,13 +26,13 @@ const registerValidationSchema = Joi.object({
 
 //validation for update data
 const updateValidationSchema = Joi.object({
-  name: Joi.string().min(3),
-  email: Joi.string(),
-  phone: Joi.number(),
-  userType: Joi.string(),
+  name: Joi.string().min(3).required(),
+  email: Joi.string().required(),
+  phone: Joi.number().required(),
+  userType: Joi.string().required(),
   image: Joi.string(),
-  address: Joi.string().min(5),
-  password: Joi.string().min(8),
+  address: Joi.string().min(5).required(),
+  password: Joi.string().min(8).required(),
 });
 
 //validation to verify data
@@ -74,30 +52,6 @@ const loginValidationSchema = Joi.object({
   password: Joi.string().min(3).required(),
 });
 
-/////////////////////////
-// Uploads an image file
-/////////////////////////
-const uploadImage = async (imagePath) => {
-  console.log("in update user ==> ", imagePath)
-
-  // Use the uploaded file's name as the asset's public ID and 
-  // allow overwriting the asset with new versions
-  const options = {
-    use_filename: true,
-    unique_filename: false,
-    overwrite: true,
-  };
-
-  console.log("uploading image ==> ",options)
-  try {
-    // Upload the image
-    const result = await cloudinary.uploader.upload(imagePath, options);
-    console.log(result.url);
-    return result.url;
-  } catch (error) {
-    console.error("error........................",error);
-  }
-};
 
 
 
@@ -178,9 +132,9 @@ const userController = {
       let updatedUser = req.body;
       // console.log("image ==> ",updatedUser.image)
       
-      const url = await uploadImage(updatedUser.image);
-      updatedUser.image = url;
-      console.log("public id ==> ",url, "updated user", updatedUser)
+      // const url = await uploadImage(updatedUser.image);
+      // updatedUser.image = url;
+      // console.log("public id ==> ",url, "updated user", updatedUser)
       
       let name = updatedUser.name.split(" ");
       const checkName = (name) => {

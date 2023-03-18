@@ -9,6 +9,7 @@ const shiftsRouter = express_1.default.Router();
 shiftsRouter.post("/startShift", shifts_controller_1.default.startShift);
 shiftsRouter.put("/changeLocation/:id", shifts_controller_1.default.changeLocation);
 shiftsRouter.put("/endShift/:id", shifts_controller_1.default.endShift);
+shiftsRouter.get("/getActiveShifts", shifts_controller_1.default.getActiveShifts);
 shiftsRouter.get("/getAllShifts", shifts_controller_1.default.getAllShifts);
 shiftsRouter.get("/getShiftsOfOneUser/:userID", shifts_controller_1.default.getShiftsOfOneUser);
 shiftsRouter.get("/getNumberOfHours/:userID", shifts_controller_1.default.getNumberOfHours);
