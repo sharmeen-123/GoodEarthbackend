@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const user_model_1 = __importDefault(require("../models/user.model"));
+const shifts_model_1 = __importDefault(require("../models/shifts.model"));
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 //VALIDATION
@@ -21,7 +22,7 @@ const registerValidationSchema = Joi.object({
     firstName: Joi.string().min(3).required(),
     lastName: Joi.string().min(3),
     email: Joi.string().required(),
-    phone: Joi.number().required(),
+    phone: Joi.string().required(),
     password: Joi.string().min(3).required(),
     userType: Joi.string().required(),
     verified: Joi.boolean().required(),
@@ -35,7 +36,7 @@ const registerValidationSchema = Joi.object({
 const updateValidationSchema = Joi.object({
     name: Joi.string().min(3).required(),
     email: Joi.string().required(),
-    phone: Joi.number().required(),
+    phone: Joi.string().required(),
     userType: Joi.string().required(),
     image: Joi.string(),
     address: Joi.string().min(5).required(),
@@ -255,6 +256,47 @@ const userController = {
             });
             res.status(200).send({
                 data: data,
+            });
+        });
+    },
+    // ----------------- api to find user status (active) ----------------- 
+    getUserStatus(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = req.query;
+            let users = yield user_model_1.default.find({
+                startedBy: user.startedBy,
+            });
+            let shift = yield shifts_model_1.default.find({
+                startedBy: user.startedBy,
+            });
+            let userWithStatus = [];
+            let obj, active;
+            users.map((val, ind) => {
+                active = false;
+                console.log("..............................");
+                shift.map((val2, ind2) => {
+                    // console.log("val....", val._id," val2.........", val2.userID)
+                    if (val._id.toString() === val2.userID.toString()) {
+                        active = true;
+                    }
+                });
+                if (val.image) {
+                    obj = {
+                        name: val.firstName + " " + val.lastName,
+                        image: val.image,
+                        active: active
+                    };
+                }
+                else {
+                    obj = {
+                        name: val.firstName + " " + val.lastName,
+                        active: active
+                    };
+                }
+                userWithStatus.push(obj);
+            });
+            res.status(200).send({
+                data: userWithStatus,
             });
         });
     },

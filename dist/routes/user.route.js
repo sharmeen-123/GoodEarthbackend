@@ -14,6 +14,7 @@ userRouter.put("/switchUserStatus/:id", user_controller_1.default.switchUserStat
 userRouter.delete("/deleteUser/:id", user_controller_1.default.deleteUser);
 userRouter.post("/login", user_controller_1.default.login);
 userRouter.get("/getAllUsers", user_controller_1.default.getAllUsers);
+userRouter.get("/getUserStatus", user_controller_1.default.getUserStatus);
 userRouter.get("/getOneUser/:id", user_controller_1.default.getOneUser);
 userRouter.get("/getNumberOfUsers", user_controller_1.default.getNumberOfUsers);
 userRouter.get("/getUserByName/:name", user_controller_1.default.getUserByName);

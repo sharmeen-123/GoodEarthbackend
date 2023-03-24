@@ -1,5 +1,6 @@
 import router from "../routes/main.route";
 import User from "../models/user.model";
+import shifts from "../models/shifts.model";
 import { json } from "express";
 
 const bcrypt = require("bcryptjs");
@@ -12,7 +13,7 @@ const registerValidationSchema = Joi.object({
   firstName: Joi.string().min(3).required(),
   lastName: Joi.string().min(3),
   email: Joi.string().required(),
-  phone: Joi.number().required(),
+  phone: Joi.string().required(),
   password: Joi.string().min(3).required(),
   userType: Joi.string().required(),
   verified: Joi.boolean().required(),
@@ -28,7 +29,7 @@ const registerValidationSchema = Joi.object({
 const updateValidationSchema = Joi.object({
   name: Joi.string().min(3).required(),
   email: Joi.string().required(),
-  phone: Joi.number().required(),
+  phone: Joi.string().required(),
   userType: Joi.string().required(),
   image: Joi.string(),
   address: Joi.string().min(5).required(),
@@ -285,6 +286,46 @@ const userController = {
       data: data,
     });
   },
+
+ // ----------------- api to find user status (active) ----------------- 
+ async getUserStatus(req, res) {
+  let user = req.query;
+  let users = await User.find({
+    startedBy: user.startedBy,
+  });
+  let shift = await shifts.find({
+    startedBy: user.startedBy,
+  });
+  let userWithStatus = []
+  let obj, active;
+  users.map((val, ind)=>{
+    active = false;
+    console.log("..............................")
+    shift.map((val2, ind2)=>{
+      // console.log("val....", val._id," val2.........", val2.userID)
+      if(val._id.toString()===val2.userID.toString()){
+          active = true;
+      }
+    })
+    if(val.image){
+      obj = {
+        name: val.firstName+" "+val.lastName,
+        image: val.image,
+        active: active
+      }
+    }else{
+      obj = {
+        name: val.firstName+" "+val.lastName,
+        active: active
+      }
+    }
+    userWithStatus.push(obj)
+    
+  })
+  res.status(200).send({
+    data: userWithStatus,
+  });
+},
 
   // ----------------- api to get particular users by matching id ----------------- 
   async getOneUser(req, res) {
