@@ -18,7 +18,7 @@ let paymenttid = false;
 const addpaymentValidationSchema = Joi.object({
   userName: Joi.string().required(),
   userEmail: Joi.string().required(),
-  userImage: Joi.string().required(),
+  userImage: Joi.string(),
   totalHours: Joi.number().required(),
   wage: Joi.number().required(),
   paidAmount: Joi.number().required(),
