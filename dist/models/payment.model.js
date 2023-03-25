@@ -17,7 +17,6 @@ const paymentSchema = new Schema({
     },
     userImage: {
         type: String,
-        required: true
     },
     userEmail: {
         type: String,
