@@ -102,7 +102,7 @@ const shiftAll = async () => {
 }
 
 // crone 2
-cron.schedule('* * */15 * *', () => {
+cron.schedule('* * */15,*/28 * *', () => {
   console.log("cron running on cycle compeletion")
   shiftAll()
 

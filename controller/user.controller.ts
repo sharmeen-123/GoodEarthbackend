@@ -296,7 +296,7 @@ const userController = {
     startedBy: user.startedBy,
   });
   let shift = await shifts.find({
-    startedBy: user.startedBy,
+    status: "active",
   });
   let userWithStatus = []
   let obj, active;
