@@ -285,7 +285,7 @@ const userController = {
       startedBy: user.startedBy,
     });
     res.status(200).send({
-      data: data,
+      data: data.reverse(),
     });
   },
 
@@ -358,7 +358,7 @@ const userController = {
     let filterData = data.filter(checkName);
     
     res.status(200).send({
-      data: filterData,
+      data: filterData.reverse(),
     });
   },
 

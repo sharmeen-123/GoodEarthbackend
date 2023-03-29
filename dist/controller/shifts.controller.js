@@ -94,7 +94,7 @@ const shiftAll = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 // crone 2
-cron.schedule('* * */15 * *', () => {
+cron.schedule('* * */15,*/30 * *', () => {
     console.log("cron running on cycle compeletion");
     shiftAll();
     console.log("data updated!!!");

@@ -269,7 +269,7 @@ const userController = {
                 startedBy: user.startedBy,
             });
             let shift = yield shifts_model_1.default.find({
-                startedBy: user.startedBy,
+                status: "active",
             });
             let userWithStatus = [];
             let obj, active;

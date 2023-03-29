@@ -131,7 +131,7 @@ const paymentsController = {
       startedBy: payment.startedBy,
     });
     res.status(200).send({
-      data: data,
+      data: data.reverse(),
     });
   },
 
@@ -256,7 +256,7 @@ const paymentsController = {
     let filterData = data.filter(checkName);
 
     res.status(200).send({
-      data: filterData,
+      data: filterData.reverse(),
     });
   },
 
