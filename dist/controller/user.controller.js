@@ -55,6 +55,7 @@ const activeUserValidationSchema = Joi.object({
 const loginValidationSchema = Joi.object({
     email: Joi.string().required(),
     password: Joi.string().min(3).required(),
+    job: Joi.string().required(),
 });
 const userController = {
     // ----------------- Api to register user ----------------- 
@@ -292,7 +293,8 @@ const userController = {
                                 startTime: val2.checkinTime,
                                 lastLocation: val2.lastLocation,
                                 locations: val2.locations,
-                                checkinLocation: val2.checkinLocation
+                                checkinLocation: val2.checkinLocation,
+                                userID: val2.userID,
                             };
                         }
                         else {
@@ -307,7 +309,8 @@ const userController = {
                                 currentLocation: val2.lastLocation,
                                 lastLocation: val2.lastLocation,
                                 locations: val2.locations,
-                                checkinLocation: val2.checkinLocation
+                                checkinLocation: val2.checkinLocation,
+                                userID: val2.userID,
                             };
                         }
                     }
@@ -388,7 +391,10 @@ const userController = {
             else {
                 const userData = req.body;
                 const user = new user_model_1.default(userData);
-                const foundUser = yield user_model_1.default.findOne({ email: userData.email });
+                const foundUser = yield user_model_1.default.findOne({
+                    email: userData.email,
+                    userType: { $regex: userData.job, $options: "i" }
+                });
                 if (!foundUser) {
                     res.status(400).send("Email or Password is wrong");
                 }
