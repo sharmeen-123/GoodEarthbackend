@@ -36,7 +36,7 @@ const endShiftValidationSchema = Joi.object({
 });
 // validate body of change location
 const changeLocationValidationSchema = Joi.object({
-    lastLocation: Joi.object().min(3).required(),
+    lastLocation: Joi.object().min(2).required(),
 });
 // .................... to update location .........................
 const updateData = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -44,7 +44,7 @@ const updateData = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const response = yield axios_1.default.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
         let location = response.data;
-        console.log(`Location: ${location.latitude}`);
+        console.log(`Location: ${location}`);
         let updatedLocation = {
             longitude: location.longitude,
             latitude: location.latitude

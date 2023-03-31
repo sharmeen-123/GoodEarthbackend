@@ -257,7 +257,7 @@ const userController = {
                 startedBy: user.startedBy,
             });
             res.status(200).send({
-                data: data,
+                data: data.reverse(),
             });
         });
     },
@@ -272,7 +272,8 @@ const userController = {
                 status: "active",
             });
             let userWithStatus = [];
-            let obj, active;
+            let obj;
+            let active;
             users.map((val, ind) => {
                 active = false;
                 console.log("..............................");
@@ -280,26 +281,50 @@ const userController = {
                     // console.log("val....", val._id," val2.........", val2.userID)
                     if (val._id.toString() === val2.userID.toString()) {
                         active = true;
+                        if (val.image) {
+                            obj = {
+                                name: val.firstName + " " + val.lastName,
+                                image: val.image,
+                                active: active,
+                                email: val.email,
+                                job: val.userType,
+                                contact: val.phone,
+                                startTime: val2.checkinTime,
+                                lastLocation: val2.lastLocation,
+                                locations: val2.locations,
+                                checkinLocation: val2.checkinLocation
+                            };
+                        }
+                        else {
+                            obj = {
+                                name: val.firstName + " " + val.lastName,
+                                image: 'aa',
+                                active: active,
+                                email: val.email,
+                                job: val.userType,
+                                contact: val.phone,
+                                startTime: val2.checkinTime,
+                                currentLocation: val2.lastLocation,
+                                lastLocation: val2.lastLocation,
+                                locations: val2.locations,
+                                checkinLocation: val2.checkinLocation
+                            };
+                        }
                     }
                 });
-                if (val.image) {
-                    obj = {
-                        name: val.firstName + " " + val.lastName,
-                        image: val.image,
-                        active: active
-                    };
+                if (active) {
+                    userWithStatus.push(obj);
                 }
-                else {
-                    obj = {
-                        name: val.firstName + " " + val.lastName,
-                        active: active
-                    };
-                }
-                userWithStatus.push(obj);
             });
+            // if(userWithStatus.length>0){
             res.status(200).send({
                 data: userWithStatus,
             });
+            // }else{
+            //     res.status(400).send({
+            //       data: 'data not exists',
+            //     })
+            //   }
         });
     },
     // ----------------- api to get particular users by matching id ----------------- 
@@ -330,7 +355,7 @@ const userController = {
             };
             let filterData = data.filter(checkName);
             res.status(200).send({
-                data: filterData,
+                data: filterData.reverse(),
             });
         });
     },
@@ -380,12 +405,12 @@ const userController = {
                     }
                     else {
                         const token = jwt.sign({ _id: foundUser._id }, process.env.TOKEN_SECRET);
+                        const data = {
+                            name: foundUser.firstName + " " + foundUser.lastName,
+                            image: foundUser.image,
+                        };
                         res.status(200).send({
-                            authToken: token,
-                            // name: foundUser.name,
-                            // email: foundUser.email,
-                            _id: foundUser._id,
-                            // isAmdin: foundUser.isAdmin,
+                            data: data
                         });
                     }
                 }

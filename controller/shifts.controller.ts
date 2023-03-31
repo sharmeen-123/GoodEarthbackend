@@ -28,7 +28,7 @@ const endShiftValidationSchema = Joi.object({
 });
 // validate body of change location
 const changeLocationValidationSchema = Joi.object({
-  lastLocation: Joi.object().min(3).required(),
+  lastLocation: Joi.object().min(2).required(),
 });
 
 // .................... to update location .........................
@@ -37,7 +37,7 @@ const updateData = async () => {
   try {
     const response = await axios.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
     let location = response.data;
-    console.log(`Location: ${location.latitude}`);
+    console.log(`Location: ${location}`);
     let updatedLocation = {
       longitude: location.longitude,
       latitude: location.latitude
@@ -104,7 +104,7 @@ const shiftAll = async () => {
 // crone 2
 cron.schedule('* * */15,*/30 * *', () => {
   console.log("cron running on cycle compeletion")
-  shiftAll()
+  shiftAll() 
 
   console.log("data updated!!!")
 
