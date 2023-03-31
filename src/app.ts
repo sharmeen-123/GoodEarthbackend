@@ -22,8 +22,8 @@ class App {
       withCredentials: true,
       transports: ["websocket", "polling"],
       cors: {
-        origin: "http://127.0.0.1:8081",
-        // origin: '*',
+        // origin: "http://127.0.0.1:8081",
+        origin: '*',
       },
     });
     this.PORT = process.env.PORT || 8000;
