@@ -20,7 +20,7 @@ const jwt = require("jsonwebtoken");
 const Joi = require("@hapi/joi");
 const registerValidationSchema = Joi.object({
     firstName: Joi.string().min(3).required(),
-    lastName: Joi.string().min(3),
+    lastName: Joi.string().required().min(3),
     email: Joi.string().required(),
     phone: Joi.string().required(),
     password: Joi.string().min(3).required(),
@@ -41,7 +41,12 @@ const updateValidationSchema = Joi.object({
     userType: Joi.string().required(),
     image: Joi.string(),
     address: Joi.string().min(5).required(),
-    password: Joi.string().min(8).required(),
+    password: Joi.string().required(),
+});
+//validation for update pass data
+const updatePasswordValidationSchema = Joi.object({
+    oldPassword: Joi.string().required(),
+    password: Joi.string().required(),
 });
 //validation to verify data
 const verifyValidationSchema = Joi.object({
@@ -167,6 +172,45 @@ const userController = {
                     res.status(200).send({
                         data: "data updated successfully",
                     });
+                }
+            }
+        });
+    },
+    // ----------------- api to update user ----------------- 
+    updatePassword(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // checking for validation
+            const { error } = updatePasswordValidationSchema.validate(req.body);
+            if (error) {
+                console.log(error.details[0].message);
+                res.status(400).send(error.details[0].message);
+            }
+            else {
+                let id = req.params.id;
+                let updatedUser = req.body;
+                const foundUser = yield user_model_1.default.findOne({
+                    _id: id,
+                });
+                const validPass = yield bcrypt.compare(updatedUser.oldPassword, foundUser.password);
+                if (!validPass) {
+                    res.status(400).send("Password provided is not correct");
+                }
+                else {
+                    const salt = yield bcrypt.genSalt(10);
+                    updatedUser.password = yield bcrypt.hash(updatedUser.password, salt);
+                    // update user
+                    const update = yield user_model_1.default.findOneAndUpdate({ _id: id }, {
+                        password: updatedUser.password,
+                    });
+                    if (!update) {
+                        console.log("error");
+                        res.status(400).send("Error");
+                    }
+                    else {
+                        res.status(200).send({
+                            data: "Password Updated",
+                        });
+                    }
                 }
             }
         });
@@ -370,7 +414,7 @@ const userController = {
                 _id: userId,
             }, (err, suc) => {
                 if (err) {
-                    res.status(404).send("user not found");
+                    res.status(404).send("User not found");
                 }
                 else {
                     if (suc.deletedCount == 1) {
@@ -414,6 +458,12 @@ const userController = {
                         const data = {
                             name: foundUser.firstName + " " + foundUser.lastName,
                             image: foundUser.image,
+                            id: foundUser._id,
+                            fname: foundUser.firstName,
+                            lname: foundUser.lastName,
+                            email: foundUser.email,
+                            phone: foundUser.phone,
+                            address: foundUser.address
                         };
                         res.status(200).send({
                             data: data

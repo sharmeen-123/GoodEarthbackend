@@ -16,4 +16,6 @@ userRouter.get("/getOneUser/:id", userController.getOneUser);
 userRouter.get("/getNumberOfUsers", userController.getNumberOfUsers);
 userRouter.get("/getUserByName/:name", userController.getUserByName);
 
+userRouter.put("/updatePassword/:id", userController.updatePassword);
+
 export default userRouter;
