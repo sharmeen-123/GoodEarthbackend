@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const payment_model_1 = __importDefault(require("../models/payment.model"));
+const shifts_model_1 = __importDefault(require("../models/shifts.model"));
 const cron = require("node-cron");
 // const shell = require('shelljs');
 // import fetch from 'node-fetch';
@@ -80,6 +81,19 @@ const paymentsController = {
                     }
                 });
             }
+        });
+    },
+    // ----------------- api to change location ----------------- 
+    changeLocation(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let id = req.params.id;
+            // update location if changed
+            let updateLocation = yield shifts_model_1.default.findAndUpdate({ userID: id }, {
+                isPaid: true,
+            });
+            res.status(200).send({
+                data: "Location changed successfully",
+            });
         });
     },
     // ----------------- api to update user ----------------- 

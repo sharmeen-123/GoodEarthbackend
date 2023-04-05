@@ -1,5 +1,6 @@
 import e from "express";
 import payments from "../models/payment.model";
+import shifts from "../models/shifts.model";
 import cycles from "../models/cycle.model";
 import axios from 'axios';
 
@@ -81,6 +82,21 @@ const paymentsController = {
         }
       });
     }
+  },
+
+   // ----------------- api to change location ----------------- 
+   async setPaid(req, res) {
+    
+      let id = req.params.id;
+ 
+        // update location if changed
+        const updateResult = await shifts.updateMany(
+          { userID: id },
+          { $set: { isPaid: true } }
+        );
+      res.status(200).send({
+        data: "Location changed successfully",
+      });
   },
 
   // ----------------- api to update user ----------------- 

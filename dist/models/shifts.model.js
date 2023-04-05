@@ -27,6 +27,10 @@ const shiftSchema = new Schema({
     status: {
         type: String,
     },
+    isPaid: {
+        type: Boolean,
+        required: true,
+    },
     userID: {
         type: mongoose.Schema.ObjectId,
         required: true,

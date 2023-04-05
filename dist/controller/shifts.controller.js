@@ -117,6 +117,7 @@ const shiftsController = {
                 shiftData.status = "active";
                 shiftData.lastLocation = shiftData.checkinLocation;
                 shiftData.totalHours = "00:00:00";
+                shiftData.isPaid = false;
                 // creating array of locations
                 let locations = [shiftData.checkinLocation];
                 console.log(locations);

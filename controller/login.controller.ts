@@ -76,10 +76,7 @@ const loginController = {
               { _id: registeredUser._id },
               process.env.TOKEN_SECRET
             );
-
-            // sending response
-            res.status(200).send({
-              authToken: token,
+            let data = {
               firstName: registeredUser.firstName,
               lastName: registeredUser.lastName,
               email: registeredUser.email,
@@ -92,6 +89,12 @@ const loginController = {
               password: registeredUser.password,
               status: registeredUser.status,
               _id: registeredUser._id,
+            }
+
+            // sending response
+            res.status(200).send({
+              data: data, 
+            token: token
             });
           }
         });
