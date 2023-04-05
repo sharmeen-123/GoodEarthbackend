@@ -15,24 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const user_model_1 = __importDefault(require("../models/user.model"));
 const shifts_model_1 = __importDefault(require("../models/shifts.model"));
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 //VALIDATION
 const Joi = require("@hapi/joi");
-const registerValidationSchema = Joi.object({
-    firstName: Joi.string().min(3).required(),
-    lastName: Joi.string().required().min(3),
-    email: Joi.string().required(),
-    phone: Joi.string().required(),
-    password: Joi.string().min(3).required(),
-    userType: Joi.string().required(),
-    verified: Joi.boolean().required(),
-    image: Joi.string(),
-    address: Joi.string(),
-    // dateJoined: Joi.string().required(),
-    // active: Joi.boolean().required(),
-    status: Joi.string().required(),
-    isAdmin: Joi.boolean(),
-});
 //validation for update data
 const updateValidationSchema = Joi.object({
     name: Joi.string().min(3).required(),
@@ -41,88 +25,18 @@ const updateValidationSchema = Joi.object({
     userType: Joi.string().required(),
     image: Joi.string(),
     address: Joi.string().min(5).required(),
-    password: Joi.string().required(),
+    password: Joi.string(),
 });
 //validation for update pass data
 const updatePasswordValidationSchema = Joi.object({
     oldPassword: Joi.string().required(),
     password: Joi.string().required(),
 });
-//validation to verify data
-const verifyValidationSchema = Joi.object({
-    verified: Joi.boolean().required(),
-});
 //validation to make user active
 const activeUserValidationSchema = Joi.object({
     active: Joi.boolean().required(),
 });
-//validation for login data
-const loginValidationSchema = Joi.object({
-    email: Joi.string().required(),
-    password: Joi.string().min(3).required(),
-    job: Joi.string().required(),
-});
 const userController = {
-    // ----------------- Api to register user ----------------- 
-    register(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // checking for validations
-            const { error } = registerValidationSchema.validate(req.body);
-            if (error) {
-                console.log(error.details[0].message);
-                res.status(400).send(error.details[0].message);
-            }
-            else {
-                let userData = req.body;
-                let user = new user_model_1.default(userData);
-                // check if user already exists
-                const emailExists = yield user_model_1.default.findOne({
-                    email: user.email,
-                });
-                if (emailExists) {
-                    console.log("already exisits");
-                    res.status(400).send("User Already Exists");
-                }
-                else {
-                    // encrypting password
-                    const salt = yield bcrypt.genSalt(10);
-                    user.password = yield bcrypt.hash(user.password, salt);
-                    var today = new Date(), date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
-                    user.dateJoined = date;
-                    // if(user.image){
-                    //   console.log("in Uploading Imagee", user.image)
-                    //   const url = await uploadImage(user.image);
-                    //   user.image = url;
-                    // }
-                    user.save((error, registeredUser) => {
-                        if (error) {
-                            res.send(error.message);
-                            console.log(error.message);
-                        }
-                        else {
-                            const token = jwt.sign({ _id: registeredUser._id }, process.env.TOKEN_SECRET);
-                            // sending response
-                            res.status(200).send({
-                                authToken: token,
-                                firstName: registeredUser.firstName,
-                                lastName: registeredUser.lastName,
-                                email: registeredUser.email,
-                                phone: registeredUser.phone,
-                                userType: registeredUser.userType,
-                                verified: registeredUser.verified,
-                                image: registeredUser.image,
-                                address: registeredUser.address,
-                                // active: registeredUser.active,
-                                password: registeredUser.password,
-                                status: registeredUser.status,
-                                _id: registeredUser._id,
-                            });
-                        }
-                    });
-                }
-            }
-        });
-    },
     // ----------------- api to update user ----------------- 
     updateUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -150,20 +64,33 @@ const userController = {
                     }
                 };
                 let namee = name.filter(checkName);
-                const salt = yield bcrypt.genSalt(10);
-                updatedUser.password = yield bcrypt.hash(updatedUser.password, salt);
-                console.log("password", updatedUser.password);
-                console.log("id", id);
                 // update user
-                const update = yield user_model_1.default.findOneAndUpdate({ _id: id }, {
-                    firstName: namee[0],
-                    lastName: namee[1],
-                    password: updatedUser.password,
-                    email: updatedUser.email,
-                    phone: updatedUser.phone,
-                    image: updatedUser.image,
-                    address: updatedUser.address,
-                });
+                let update;
+                if (updatedUser.password) {
+                    const salt = yield bcrypt.genSalt(10);
+                    updatedUser.password = yield bcrypt.hash(updatedUser.password, salt);
+                    console.log("password", updatedUser.password);
+                    console.log("id", id);
+                    update = yield user_model_1.default.findOneAndUpdate({ _id: id }, {
+                        firstName: namee[0],
+                        lastName: namee[1],
+                        password: updatedUser.password,
+                        email: updatedUser.email,
+                        phone: updatedUser.phone,
+                        image: updatedUser.image,
+                        address: updatedUser.address,
+                    });
+                }
+                else {
+                    update = yield user_model_1.default.findOneAndUpdate({ _id: id }, {
+                        firstName: namee[0],
+                        lastName: namee[1],
+                        email: updatedUser.email,
+                        phone: updatedUser.phone,
+                        image: updatedUser.image,
+                        address: updatedUser.address,
+                    });
+                }
                 if (!update) {
                     console.log("error");
                     res.status(400).send("Error");
@@ -193,7 +120,7 @@ const userController = {
                 });
                 const validPass = yield bcrypt.compare(updatedUser.oldPassword, foundUser.password);
                 if (!validPass) {
-                    res.status(400).send("Password provided is not correct");
+                    res.status(400).send("Incorrect Password");
                 }
                 else {
                     const salt = yield bcrypt.genSalt(10);
@@ -300,6 +227,18 @@ const userController = {
             let user = req.query;
             let data = yield user_model_1.default.find({
                 startedBy: user.startedBy,
+            });
+            res.status(200).send({
+                data: data.reverse(),
+            });
+        });
+    },
+    // ----------------- api to get all siteWorkers ----------------- 
+    getAllSiteWorkers(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = req.query;
+            let data = yield user_model_1.default.find({
+                userType: 'Site Worker',
             });
             res.status(200).send({
                 data: data.reverse(),
@@ -424,53 +363,6 @@ const userController = {
                         res.status(404).send("user not found");
                 }
             });
-        });
-    },
-    login(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { error } = loginValidationSchema.validate(req.body);
-            if (error) {
-                res.status(400).send(error.details[0].message);
-            }
-            else {
-                const userData = req.body;
-                const user = new user_model_1.default(userData);
-                const foundUser = yield user_model_1.default.findOne({
-                    email: userData.email,
-                    userType: { $regex: userData.job, $options: "i" }
-                });
-                if (!foundUser) {
-                    res.status(400).send("Email or Password is wrong");
-                }
-                else if (foundUser.status === 'block') {
-                    res.status(400).send("Your account have been blocked by admin. Contact company for detailed information");
-                }
-                else if (foundUser.verified === false) {
-                    res.status(400).send("Verification is pending. Contact company for information");
-                }
-                else {
-                    const validPass = yield bcrypt.compare(user.password, foundUser.password);
-                    if (!validPass) {
-                        res.status(400).send("Email or Password is wrong");
-                    }
-                    else {
-                        const token = jwt.sign({ _id: foundUser._id }, process.env.TOKEN_SECRET);
-                        const data = {
-                            name: foundUser.firstName + " " + foundUser.lastName,
-                            image: foundUser.image,
-                            id: foundUser._id,
-                            fname: foundUser.firstName,
-                            lname: foundUser.lastName,
-                            email: foundUser.email,
-                            phone: foundUser.phone,
-                            address: foundUser.address
-                        };
-                        res.status(200).send({
-                            data: data
-                        });
-                    }
-                }
-            }
         });
     },
     // ----------------- api to get number of admin and employees ----------------- 

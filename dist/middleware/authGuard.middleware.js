@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jwt = require("jsonwebtoken");
 //function to verify authentication
 function default_1(req, res, next) {
-    const token = req.header("auth-token");
+    const token = req.header("authorization");
+    console.log("req.header is", token);
     if (!token) {
         res.status(401).send("Access Denied");
     }

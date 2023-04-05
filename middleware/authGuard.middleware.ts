@@ -2,7 +2,8 @@ const jwt = require("jsonwebtoken");
 
 //function to verify authentication
 export default function (req, res, next) {
-  const token = req.header("auth-token");
+  const token = req.header("authorization");
+  console.log("req.header is", req.headers)
   if (!token) {
     res.status(401).send("Access Denied");
   } else {
