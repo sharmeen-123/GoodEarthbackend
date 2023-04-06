@@ -84,13 +84,11 @@ const paymentsController = {
         });
     },
     // ----------------- api to change location ----------------- 
-    changeLocation(req, res) {
+    setPaid(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let id = req.params.id;
             // update location if changed
-            let updateLocation = yield shifts_model_1.default.findAndUpdate({ userID: id }, {
-                isPaid: true,
-            });
+            const updateResult = yield shifts_model_1.default.updateMany({ userID: id }, { $set: { isPaid: true } });
             res.status(200).send({
                 data: "Location changed successfully",
             });

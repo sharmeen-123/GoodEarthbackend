@@ -13,5 +13,6 @@ paymentsRouter.get("/getAmountPaid", payment_controller_1.default.getAmountPaid)
 paymentsRouter.get("/getPaymentByName/:name", payment_controller_1.default.getPaymentByName);
 paymentsRouter.delete("/deletePayment/:id", payment_controller_1.default.deletePayment);
 paymentsRouter.put("/updatePayment/:id", payment_controller_1.default.updatePayment);
+paymentsRouter.put("/setPaid/:id", payment_controller_1.default.setPaid);
 exports.default = paymentsRouter;
 //# sourceMappingURL=payment.route.js.map

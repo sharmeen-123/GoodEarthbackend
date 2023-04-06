@@ -14,7 +14,7 @@ router.get("/", (req, res) => {
 router.use("/auth", loginRouter);
 router.use("/user",authGuard, userRouter);
 router.use("/shifts",authGuard, shiftsRouter);
-router.use("/payment", paymentsRouter);
+router.use("/payment",authGuard, paymentsRouter);
 router.use("/cycle",authGuard, cyclesRouter);
 
 export default router;

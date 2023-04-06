@@ -299,7 +299,8 @@ const shiftsController = {
             let userID = req.params.userID;
             const completedShifts = yield shifts_model_1.default.find({
                 status: "Compeleted",
-                userID: userID
+                userID: userID,
+                isPaid: false
             });
             let totalHours = 0;
             completedShifts.map((val, ind) => {
