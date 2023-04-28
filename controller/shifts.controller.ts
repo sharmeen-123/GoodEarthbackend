@@ -2,6 +2,7 @@ import e from "express";
 import shifts from "../models/shifts.model";
 import cycles from "../models/cycle.model";
 import axios from 'axios';
+import { get } from "mongoose";
 
 const cron = require("node-cron");
 // const shell = require('shelljs');
@@ -23,8 +24,6 @@ const startShiftValidationSchema = Joi.object({
 // validate body of end shift
 const endShiftValidationSchema = Joi.object({
   checkoutLocation: Joi.object().min(3).required(),
-  checkoutTime: Joi.date().required(),
-  totalHours: Joi.string().required()
 });
 // validate body of change location
 const changeLocationValidationSchema = Joi.object({
@@ -33,7 +32,7 @@ const changeLocationValidationSchema = Joi.object({
 
 // .................... to update location .........................
 const updateData = async () => {
-  console.log("in update.......")
+  // console.log("in update.......")
   try {
     const response = await axios.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
     let location = response.data;
@@ -79,9 +78,9 @@ const cycle = async (data) => {
 
 }
 
-const deleteShifts = async (data) =>{
-   // Function call
-   shifts.remove().then(function () {
+const deleteShifts = async (data) => {
+  // Function call
+  shifts.remove().then(function () {
     console.log("shifts removed")  // Success
   }).catch(function (error) {
     console.log(error)      // Failure
@@ -95,16 +94,16 @@ const shiftAll = async () => {
   let data = await shifts.find({
   });
   // console.log(data)
-  if(data){
+  if (data) {
 
     cycle(data)
   }
 }
 
 // crone 2
-cron.schedule('* * */15,*/30 * *', () => {
+cron.schedule('0 0 */15 * *', () => {
   console.log("cron running on cycle compeletion")
-  shiftAll() 
+  shiftAll()
 
   console.log("data updated!!!")
 
@@ -138,21 +137,11 @@ const shiftsController = {
           res.send(error.message);
         } else {
           shifttid = newShift._id;
-          const token = jwt.sign(
-            { _id: newShift._id },
-            process.env.TOKEN_SECRET
-          );
+          
 
           // sending response
           res.status(200).send({
-            authToken: token,
             userID: newShift.userID,
-            // checkinLocation: newShift.checkinLocation,
-            // checkinTime: newShift.checkinTime,
-            // locations: newShift.locations,
-            // lastLocation: newShift.lastLocation,
-            // status: newShift.status,
-            // totalHours: newShift.totalHours,
             _id: newShift._id,
           });
         }
@@ -227,6 +216,36 @@ const shiftsController = {
       let data = await shifts.find({
         _id: id,
       });
+      console.log("data is  ", data)
+
+
+      const currentTime = new Date();
+      const givenTime = data[0].checkinTime
+
+      // Calculate the difference in milliseconds
+      const timeDiff = currentTime.getTime() - new Date(givenTime).getTime();
+
+      // Convert the difference to hours, minutes, and seconds
+      let hours = Math.floor(timeDiff / (1000 * 60 * 60)).toString();
+      let minutes = Math.floor((timeDiff / (1000 * 60)) % 60).toString();
+      let seconds = Math.floor((timeDiff / 1000) % 60).toString();
+      if (hours.toString().length === 1) {
+
+        hours = '0' + hours.toString()
+      }
+      if (minutes.toString().length === 1) {
+
+        minutes = '0' + minutes.toString()
+      }
+      if (seconds.toString().length === 1) {
+
+        seconds = '0' + seconds.toString()
+      }
+
+      const totalHours = hours + " : " + minutes + " : " + seconds
+
+
+
 
       // update location
       const updateLocation = await shifts.findOneAndUpdate(
@@ -234,8 +253,8 @@ const shiftsController = {
         {
           lastLocation: endShift.checkoutLocation,
           checkoutLocation: endShift.checkoutLocation,
-          checkoutTime: endShift.checkoutTime,
-          totalHours: endShift.totalHours,
+          checkoutTime: currentTime,
+          totalHours: totalHours,
           status: "Compeleted",
           $push: {
             locations: endShift.checkoutLocation,
@@ -265,29 +284,49 @@ const shiftsController = {
     });
   },
 
-    // ----------------- api to get all shifts ----------------- 
-    async getActiveShifts(req, res) {
-      let shift = req.query;
-      let data = await shifts.find({
-        startedBy: shift.startedBy,
-        status: "active"
-      });
-      res.status(200).send({
-        data: data,
-      });
-    },
+  // ----------------- api to get all shifts ----------------- 
+  async getActiveShifts(req, res) {
+    let shift = req.query;
+    let data = await shifts.find({
+      startedBy: shift.startedBy,
+      status: "active"
+    });
+    res.status(200).send({
+      data: data,
+    });
+  },
 
   // ----------------- api to get all shifts of particular user ----------------- 
   async getShiftsOfOneUser(req, res) {
     let userID = req.params.userID;
-    let shift = await shifts.find({
+    let shiftt = await shifts.find({
       userID: userID,
-      status : "Compeleted",
+      status: "Compeleted",
     });
+    let data = []
+    // let obj = {}
+    let shift = shiftt.map((val, ind) => {
+      let checkin = getTime(val.checkinTime)
+      let checkout = getTime(val.checkoutTime)
+   
+      const checkinDate = checkin.date
+      const checkinTime = checkin.time
+      const checkoutDate = checkout.date
+      const checkoutTime = checkout.time
+      let obj = {
+        totalHours: val.totalHours,
+        checkinTime: checkinTime,
+        checkinDate: checkinDate,
+        checkoutTime: checkoutTime,
+        checkoutDate: checkoutDate,
+        status: val.status
+      }
+      data.push(obj)
+    })
     if (shift.length !== 0) {
       res.status(200).send({
-        data: shift,
-      });
+        data: data.reverse(),
+      })
     } else {
       res.status(400).send({
         data: "user not found!",
@@ -305,17 +344,17 @@ const shiftsController = {
       status: "active",
     });
     let allShifts = await shifts.find({
-      
+
     });
     let data = {
-      activeShifts : activeShifts.length,
-      completedShifts : completedShifts.length,
-      allShifts : allShifts.length
+      activeShifts: activeShifts.length,
+      completedShifts: completedShifts.length,
+      allShifts: allShifts.length
     }
-      res.status(200).send({
-        data: data,
-      });
-    
+    res.status(200).send({
+      data: data,
+    });
+
 
   },
 
@@ -324,7 +363,7 @@ const shiftsController = {
     let userID = req.params.userID;
     const completedShifts = await shifts.find({
       status: "Compeleted",
-      userID : userID,
+      userID: userID,
       isPaid: false
     });
     let totalHours = 0;
@@ -332,29 +371,58 @@ const shiftsController = {
       let time = val.totalHours;
       let time2 = time.split(":")
       totalHours += (+time2[0])
-      console.log((+time2[0]), " ", (+time2[1]/60), " ", (+time2[1]/(60*60)))
-      totalHours += (+time2[1]/60)
-      totalHours += (+time2[1]/(60*60))
+      // console.log((+time2[0]), " ", (+time2[1]/60), " ", (+time2[1]/(60*60)))
+      totalHours += (+time2[1] / 60)
+      totalHours += (+time2[1] / (60 * 60))
     })
     totalHours = Math.round(totalHours);
     let data = {
       totalHours: totalHours,
-      shifts : completedShifts.length
+      shifts: completedShifts.length
     }
-    if(completedShifts){
+    if (completedShifts) {
       res.status(200).send({
         data: data,
       });
-    }else{
+    } else {
       res.status(200).send({
         data: 0,
       });
     }
-     
-    
+
+
 
   },
 };
+
+const getTime = (time) => {
+  let date = time.getDate().toString();
+  let month = (time.getMonth() + 1).toString(); // add 1 because month is zero-indexed
+  let year = time.getFullYear().toString();
+  let hours = time.getHours().toString();
+  let minutes = time.getMinutes().toString();
+  let seconds = time.getSeconds().toString();
+
+  if (hours.toString().length === 1) {
+
+    hours = '0' + hours.toString()
+  }
+  if (minutes.toString().length === 1) {
+
+    minutes = '0' + minutes.toString()
+  }
+  if (seconds.toString().length === 1) {
+
+    seconds = '0' + seconds.toString()
+  }
+  const Date = date + "-" + month + '-' + year
+  const Time = hours + " : " + minutes + " : " + seconds
+  let dateTime = {
+    date: Date,
+    time: Time
+  }
+  return dateTime
+}
 
 
 

@@ -31,8 +31,6 @@ const startShiftValidationSchema = Joi.object({
 // validate body of end shift
 const endShiftValidationSchema = Joi.object({
     checkoutLocation: Joi.object().min(3).required(),
-    checkoutTime: Joi.date().required(),
-    totalHours: Joi.string().required()
 });
 // validate body of change location
 const changeLocationValidationSchema = Joi.object({
@@ -40,7 +38,7 @@ const changeLocationValidationSchema = Joi.object({
 });
 // .................... to update location .........................
 const updateData = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("in update.......");
+    // console.log("in update.......")
     try {
         const response = yield axios_1.default.get('http://api.ipapi.com/api/check?access_key=9c326d6e83bb32f28397c00bc5025384');
         let location = response.data;
@@ -206,12 +204,31 @@ const shiftsController = {
                 let data = yield shifts_model_1.default.find({
                     _id: id,
                 });
+                console.log("data is  ", data);
+                const currentTime = new Date();
+                const givenTime = data[0].checkinTime;
+                // Calculate the difference in milliseconds
+                const timeDiff = currentTime.getTime() - new Date(givenTime).getTime();
+                // Convert the difference to hours, minutes, and seconds
+                let hours = Math.floor(timeDiff / (1000 * 60 * 60)).toString();
+                let minutes = Math.floor((timeDiff / (1000 * 60)) % 60).toString();
+                let seconds = Math.floor((timeDiff / 1000) % 60).toString();
+                if (hours.toString().length === 1) {
+                    hours = '0' + hours.toString();
+                }
+                if (minutes.toString().length === 1) {
+                    minutes = '0' + minutes.toString();
+                }
+                if (seconds.toString().length === 1) {
+                    seconds = '0' + seconds.toString();
+                }
+                const totalHours = hours + " : " + minutes + " : " + seconds;
                 // update location
                 const updateLocation = yield shifts_model_1.default.findOneAndUpdate({ _id: id }, {
                     lastLocation: endShift.checkoutLocation,
                     checkoutLocation: endShift.checkoutLocation,
-                    checkoutTime: endShift.checkoutTime,
-                    totalHours: endShift.totalHours,
+                    checkoutTime: currentTime,
+                    totalHours: totalHours,
                     status: "Compeleted",
                     $push: {
                         locations: endShift.checkoutLocation,
@@ -257,13 +274,28 @@ const shiftsController = {
     getShiftsOfOneUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let userID = req.params.userID;
-            let shift = yield shifts_model_1.default.find({
+            let shiftt = yield shifts_model_1.default.find({
                 userID: userID,
                 status: "Compeleted",
             });
+            let data = [];
+            // let obj = {}
+            let shift = shiftt.map((val, ind) => {
+                let checkin = getTime(val.checkinTime);
+                const checkinDate = checkin.date;
+                const checkinTime = checkin.time;
+                let obj = {
+                    totalHours: val.totalHours,
+                    checkinTime: checkinTime,
+                    checkinDate: checkinDate,
+                    checkoutTime: new Date(val.checkoutTime).getTime(),
+                    status: val.status
+                };
+                data.push(obj);
+            });
             if (shift.length !== 0) {
                 res.status(200).send({
-                    data: shift,
+                    data: data,
                 });
             }
             else {
@@ -307,7 +339,7 @@ const shiftsController = {
                 let time = val.totalHours;
                 let time2 = time.split(":");
                 totalHours += (+time2[0]);
-                console.log((+time2[0]), " ", (+time2[1] / 60), " ", (+time2[1] / (60 * 60)));
+                // console.log((+time2[0]), " ", (+time2[1]/60), " ", (+time2[1]/(60*60)))
                 totalHours += (+time2[1] / 60);
                 totalHours += (+time2[1] / (60 * 60));
             });
@@ -328,6 +360,30 @@ const shiftsController = {
             }
         });
     },
+};
+const getTime = (time) => {
+    let date = time.getDate().toString();
+    let month = (time.getMonth() + 1).toString(); // add 1 because month is zero-indexed
+    let year = time.getFullYear().toString();
+    let hours = time.getHours().toString();
+    let minutes = time.getMinutes().toString();
+    let seconds = time.getSeconds().toString();
+    if (hours.toString().length === 1) {
+        hours = '0' + hours.toString();
+    }
+    if (minutes.toString().length === 1) {
+        minutes = '0' + minutes.toString();
+    }
+    if (seconds.toString().length === 1) {
+        seconds = '0' + seconds.toString();
+    }
+    const Date = date + "-" + month + '-' + year;
+    const Time = hours + " : " + minutes + " : " + seconds;
+    let dateTime = {
+        date: Date,
+        time: Time
+    };
+    return dateTime;
 };
 exports.default = shiftsController;
 //# sourceMappingURL=shifts.controller.js.map

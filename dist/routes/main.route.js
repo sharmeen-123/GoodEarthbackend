@@ -16,7 +16,7 @@ router.get("/", (req, res) => {
 });
 router.use("/auth", login_route_1.default);
 router.use("/user", authGuard_middleware_1.default, user_route_1.default);
-router.use("/shifts", authGuard_middleware_1.default, shifts_route_1.default);
+router.use("/shifts", shifts_route_1.default);
 router.use("/payment", authGuard_middleware_1.default, payment_route_1.default);
 router.use("/cycle", authGuard_middleware_1.default, cycle_route_1.default);
 exports.default = router;
