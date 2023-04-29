@@ -62,14 +62,9 @@ const paymentsController = {
           res.send(error.message);
         } else {
           paymenttid = newpayment._id;
-          const token = jwt.sign(
-            { _id: newpayment._id },
-            process.env.TOKEN_SECRET
-          );
 
           // sending response
           res.status(200).send({
-            authToken: token,
             userID: newpayment.userID,
             // checkinLocation: newpayment.checkinLocation,
             // checkinTime: newpayment.checkinTime,

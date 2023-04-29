@@ -92,7 +92,7 @@ const shiftAll = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 // crone 2
-cron.schedule('* * */15,*/30 * *', () => {
+cron.schedule('0 0 */15 * *', () => {
     console.log("cron running on cycle compeletion");
     shiftAll();
     console.log("data updated!!!");
@@ -127,17 +127,9 @@ const shiftsController = {
                     }
                     else {
                         shifttid = newShift._id;
-                        const token = jwt.sign({ _id: newShift._id }, process.env.TOKEN_SECRET);
                         // sending response
                         res.status(200).send({
-                            authToken: token,
                             userID: newShift.userID,
-                            // checkinLocation: newShift.checkinLocation,
-                            // checkinTime: newShift.checkinTime,
-                            // locations: newShift.locations,
-                            // lastLocation: newShift.lastLocation,
-                            // status: newShift.status,
-                            // totalHours: newShift.totalHours,
                             _id: newShift._id,
                         });
                     }
@@ -282,20 +274,63 @@ const shiftsController = {
             // let obj = {}
             let shift = shiftt.map((val, ind) => {
                 let checkin = getTime(val.checkinTime);
+                let checkout = getTime(val.checkoutTime);
                 const checkinDate = checkin.date;
                 const checkinTime = checkin.time;
+                const checkoutDate = checkout.date;
+                const checkoutTime = checkout.time;
                 let obj = {
                     totalHours: val.totalHours,
                     checkinTime: checkinTime,
                     checkinDate: checkinDate,
-                    checkoutTime: new Date(val.checkoutTime).getTime(),
+                    checkoutTime: checkoutTime,
+                    checkoutDate: checkoutDate,
                     status: val.status
                 };
                 data.push(obj);
             });
             if (shift.length !== 0) {
                 res.status(200).send({
-                    data: data,
+                    data: data.reverse(),
+                });
+            }
+            else {
+                res.status(400).send({
+                    data: "user not found!",
+                });
+            }
+        });
+    },
+    // ----------------- api to get recent 2 shifts of particular user ----------------- 
+    getRecentShiftsOfOneUser(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let userID = req.params.userID;
+            let shiftt = yield shifts_model_1.default.find({
+                userID: userID,
+                status: "Compeleted",
+            }).sort({ start_time: -1 }).limit(2);
+            let data = [];
+            // let obj = {}
+            let shift = shiftt.map((val, ind) => {
+                let checkin = getTime(val.checkinTime);
+                let checkout = getTime(val.checkoutTime);
+                const checkinDate = checkin.date;
+                const checkinTime = checkin.time;
+                const checkoutDate = checkout.date;
+                const checkoutTime = checkout.time;
+                let obj = {
+                    totalHours: val.totalHours,
+                    checkinTime: checkinTime,
+                    checkinDate: checkinDate,
+                    checkoutTime: checkoutTime,
+                    checkoutDate: checkoutDate,
+                    status: val.status
+                };
+                data.push(obj);
+            });
+            if (shift.length !== 0) {
+                res.status(200).send({
+                    data: data.reverse(),
                 });
             }
             else {

@@ -9,6 +9,7 @@ shiftsRouter.put("/endShift/:id", shiftsController.endShift);
 shiftsRouter.get("/getActiveShifts", shiftsController.getActiveShifts);
 shiftsRouter.get("/getAllShifts", shiftsController.getAllShifts);
 shiftsRouter.get("/getShiftsOfOneUser/:userID", shiftsController.getShiftsOfOneUser);
+shiftsRouter.get("/getRecentShiftsOfOneUser/:userID", shiftsController.getRecentShiftsOfOneUser);
 shiftsRouter.get("/getNumberOfHours/:userID", shiftsController.getNumberOfHours);
 shiftsRouter.get("/getNumberOfShifts", shiftsController.getNumberOfShifts);
 

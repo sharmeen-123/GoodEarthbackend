@@ -335,6 +335,45 @@ const shiftsController = {
 
   },
 
+    // ----------------- api to get recent 2 shifts of particular user ----------------- 
+    async getRecentShiftsOfOneUser(req, res) {
+      let userID = req.params.userID;
+      let shiftt = await shifts.find({
+        userID: userID,
+        status: "Compeleted",
+      }).sort({ checkinTime: -1 }).limit(2);
+      let data = []
+      // let obj = {}
+      let shift = shiftt.map((val, ind) => {
+        let checkin = getTime(val.checkinTime)
+        let checkout = getTime(val.checkoutTime)
+     
+        const checkinDate = checkin.date
+        const checkinTime = checkin.time
+        const checkoutDate = checkout.date
+        const checkoutTime = checkout.time
+        let obj = {
+          totalHours: val.totalHours,
+          checkinTime: checkinTime,
+          checkinDate: checkinDate,
+          checkoutTime: checkoutTime,
+          checkoutDate: checkoutDate,
+          status: val.status
+        }
+        data.push(obj)
+      })
+      if (shift.length !== 0) {
+        res.status(200).send({
+          data: data,
+        })
+      } else {
+        res.status(400).send({
+          data: "user not found!",
+        });
+      }
+  
+    },
+
   // ----------------- api to get number of active and completed shifts ----------------- 
   async getNumberOfShifts(req, res) {
     let completedShifts = await shifts.find({
