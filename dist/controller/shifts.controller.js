@@ -308,7 +308,7 @@ const shiftsController = {
             let shiftt = yield shifts_model_1.default.find({
                 userID: userID,
                 status: "Compeleted",
-            }).sort({ start_time: -1 }).limit(2);
+            }).sort({ checkinTime: -1 }).limit(2);
             let data = [];
             // let obj = {}
             let shift = shiftt.map((val, ind) => {
@@ -330,7 +330,7 @@ const shiftsController = {
             });
             if (shift.length !== 0) {
                 res.status(200).send({
-                    data: data.reverse(),
+                    data: data,
                 });
             }
             else {
