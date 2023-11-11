@@ -4,8 +4,8 @@
   "description": "Backend Of SEC Project",
   "main": "dist/src/server.js",
   "scripts": {
-    "start": "node dist/src/server.ts",
-    "dev": "tsc && ts-node-dev src/server.ts",
+    "start": "npm run dev",
+    "dev": "ts-node-dev src/server.ts",
     "postinstall": "tsc",
     "deploy": "git add . && git commit && git push",
     "test": "echo \"Error: no test specified\" && exit 1"
